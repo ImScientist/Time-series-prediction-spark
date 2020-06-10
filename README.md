@@ -69,4 +69,8 @@ extensions.
     
     You can check if the new jars are present in the spark session by opening a 
     Jupyter notebook and executing `spark.sparkContext.listJars.foreach(println)`
-    
+
+- Create `.jar`   
+    ```bash
+    sbt assembly
+    ```
