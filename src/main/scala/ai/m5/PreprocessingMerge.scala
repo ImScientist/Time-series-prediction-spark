@@ -1,6 +1,6 @@
 package ai.m5
 
-import org.apache.spark.sql.functions.{col, lit, udf, array, struct, explode, row_number}
+import org.apache.spark.sql.functions.{col, lit, udf, array, struct, explode, row_number, sum}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.expressions.{Window, WindowSpec}
@@ -48,6 +48,19 @@ object PreprocessingMerge {
   }
 
 
+  def filterTimeBeforeFirstSell()(df: DataFrame): DataFrame = {
+
+    val myWindow = Window
+      .partitionBy(col("id_indexed"))
+      .orderBy(col("d"))
+      .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+
+    df
+      .withColumn("sales_cumulative", sum(col("sales")).over(myWindow))
+      .filter(col("sales_cumulative") > 0)
+      .drop("sales_cumulative")
+  }
+
   def merge_data(spark: SparkSession, data_dir: String, nrows: Int = -1): DataFrame = {
 
     val calendar = spark.read.parquet(data_dir + "/trf/calendar.parquet")
@@ -71,9 +84,10 @@ object PreprocessingMerge {
         var_name = "d",
         value_name = "sales"
       )
+      .transform(filterTimeBeforeFirstSell())
       .withColumn("d", getDay(col("d")).cast(ShortType))
       .join(calendar, Seq("d"), "left")
-      //.join(prices, Seq("store_id_indexed", "item_id_indexed", "wm_yr_wk"), "left")
+      //.join(prices, Seq("store_id_indexed", "item_id_indexed", "wm_yr_wk"), "left") //I ran out of memory here :)
       .withColumn("sell_price", lit(9.58))
       .withColumn("row_n", row_number().over(idWindow))
       .withColumn("sales", col("sales").cast(DoubleType))

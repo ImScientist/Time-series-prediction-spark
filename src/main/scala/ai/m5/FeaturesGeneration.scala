@@ -66,7 +66,7 @@ object FeaturesGeneration {
           val new_name = "%s__lag_%d__alpha_%.2f__ewm".format(c, d, a).replace(".", "_")
 
           trfs = trfs :+ Ewm.ewm(
-            col("row_n") - d, collect_list(c).over(RollingWindow(lag = d)), lit(a)
+            col(colName=row_n_column) - d, collect_list(c).over(RollingWindow(lag = d)), lit(a)
           ).alias(new_name)
         }
       }

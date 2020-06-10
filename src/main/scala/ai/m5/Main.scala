@@ -10,6 +10,17 @@ import org.apache.spark.ml.Pipeline
 
 object Main {
 
+  /**
+    * Data preprocessing;
+    * - apply StringIndexer to all relevant columns
+    * - specify DataType
+    *
+    * @param data_dir data directory with the following structure:
+    *                 data_dir
+    *                   |-- source (location of the original data)
+    *                   |-- trf (location of the preprocessed data)
+    * @param store_data whether to store the data or not in data_dir/trf
+    * */
   def preprocessing(spark: SparkSession, data_dir: String, store_data: Boolean = true):
   (DataFrame, DataFrame, DataFrame) = {
 
@@ -23,54 +34,67 @@ object Main {
       prices.write.mode("overwrite").parquet(data_dir + "/trf/prices.parquet")
     }
 
-    //    val sales_grid = PreprocessingMerge.merge_data(spark=spark, data_dir=data_dir, nrows=4)
-
     (calendar, sales, prices)
   }
 
 
-  def training(spark: SparkSession, data_dir: String): Unit = {
+  def clean_nans()(df: DataFrame): DataFrame = {
 
-    val df = spark
-      .read.parquet(data_dir + "/trf/sales_grid.parquet")
+    val features = FeaturesSelection.getFeatures(df.columns)
+
+    df.na.drop(cols = features).na.fill(0)
+  }
+
+  /**
+    * Model training
+    *
+    * @param data_dir data directory with the following structure:
+    *                 data_dir
+    *                   |-- source (location of the original data)
+    *                   |-- trf (location of the preprocessed data which we will use)
+    * */
+  def training(spark: SparkSession, data_dir: String, nrows: Int = -1): Unit = {
+
+    //  spark.read.parquet(data_dir + "/trf/sales_grid.parquet")
+    val df = PreprocessingMerge.merge_data(spark, data_dir, nrows)
       .transform(FeaturesGeneration.featuresGeneration())
+      .transform(clean_nans())
 
     val features = FeaturesSelection.getFeatures(df.columns)
     val target = "sales"
 
-    val assembler = new VectorAssembler()
+    val assembler = new VectorAssembler(uid = "assembler")
       .setInputCols(features.toArray)
       .setOutputCol("features")
 
-    val transformed = assembler
-      .transform(df.na.drop(cols=features).na.fill(0))
-      .cache()
-
-    val featureIndexer = new VectorIndexer()
+    val featureIndexer = new VectorIndexer(uid = "vectorIndexer")
       .setInputCol("features")
       .setOutputCol("indexedFeatures")
       .setMaxCategories(4)
-      .fit(transformed)
 
-    // TODO: only the MML Gradient Boosting model makes use of the train, val, test splitting
-    // TODO: use the MML library
-    // val train = transformed.filter(col("d").between(0, 1913 - 28))
-    // val valid = transformed.filter(col("d").between(1913 - 27, 1913))
-    val train_valid = transformed.filter(col("d") <= 1913)
-    val test = transformed.filter(col("d").between(1913 + 1, 1941))
-    // val Array(trainingData, testData) = transformed.randomSplit(Array(0.7, 0.3))
-
-    // Train a GBT model.
-    val gbt = new GBTRegressor()
+    val gbt = new GBTRegressor(uid = "gradinetBooster")
       .setLabelCol(target)
       .setFeaturesCol("indexedFeatures")
       .setMaxIter(3)
 
-    val pipeline = new Pipeline()
-      .setStages(Array(featureIndexer, gbt))
+    val indexingPipeline = new Pipeline().setStages(
+      Array(assembler, featureIndexer)
+    )
 
-    // Train model. This also runs the indexer.
-    val model = pipeline.fit(train_valid)
+    val indexingPipelineModel = indexingPipeline.fit(df)
+
+    // TODO: only the MML Gradient Boosting model makes use of the train, val, test splitting
+    // TODO: use the MML library
+    // val train = df.filter(col("d").between(0, 1913 - 28))
+    // val valid = df.filter(col("d").between(1913 - 27, 1913))
+    val train_valid = df.filter(col("d") <= 1913)
+    val test = df.filter(col("d").between(1913 + 1, 1941))
+
+    // In the second stage we have a VectorIndexerModel and it will not be affected by the fit method.
+    val fullPipeline = new Pipeline().setStages(indexingPipelineModel.stages :+ gbt)
+
+    // Train model.
+    val model = fullPipeline.fit(train_valid)
 
     // Make predictions.
     val predictions = model.transform(test)
