@@ -4,12 +4,12 @@ resolvers += "Something else" at "https://mvnrepository.com/artifact"
 
 name := "m5_scala"
 
-version := "0.1"
+version := "0.2"
 
 organization := "com.github.imscientist"
 
-scalaVersion := "2.12.6"
-//scalaVersion := "2.12.10"
+//scalaVersion := "2.12.6"
+scalaVersion := "2.11.12"
 
 //libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 libraryDependencies += "org.apache.spark" %% "spark-core" % "2.4.4" % "provided"

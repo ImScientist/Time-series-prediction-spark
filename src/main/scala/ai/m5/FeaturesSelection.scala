@@ -1,8 +1,8 @@
-package ai.m5.challenge
+package ai.m5
 
-object features_selection {
+object FeaturesSelection {
 
-  def getFeatures(all_features: Seq[String]): (Seq[String], Seq[String]) = {
+  def getFeatures(all_features: Seq[String]): Seq[String] = {
 
     val features_cat_item = Seq(
       "item_id_indexed", "dept_id_indexed", "cat_id_indexed", "store_id_indexed", "state_id_indexed"
@@ -32,6 +32,7 @@ object features_selection {
         features_sales ++
         features_scale
 
-    (features_categorical, features_continuous)
+    // (features_categorical, features_continuous)
+    features_categorical ++ features_continuous
   }
 }

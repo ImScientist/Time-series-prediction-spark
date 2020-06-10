@@ -1,13 +1,12 @@
-package ai.m5.challenge
+package ai.m5
 
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.feature.StringIndexer
-import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.{ByteType, FloatType, ShortType}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
-
-object preprocessing_sales {
+object PreprocessingSales {
 
   def init_sales_pipeline(): Pipeline = {
 
@@ -72,7 +71,7 @@ object preprocessing_sales {
     val sales = spark.sqlContext.read.format("com.databricks.spark.csv")
       .option("header", "true")
       .load(data_dir + "/source/sales_train_evaluation.csv")
-      .transform(utils.limitRows(nrows=nrows))
+      .transform(Utils.limitRows(nrows=nrows))
 
     val pipeline_sales = init_sales_pipeline()
 

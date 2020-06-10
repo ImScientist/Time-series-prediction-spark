@@ -1,8 +1,8 @@
-package ai.m5.challenge
+package ai.m5
 
 import org.apache.spark.sql.DataFrame
 
-object utils {
+object Utils {
 
   def limitRows(nrows: Int)(df: DataFrame): DataFrame = {
 

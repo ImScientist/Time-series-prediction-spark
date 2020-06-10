@@ -1,9 +1,9 @@
-package ai.m5.challenge
+package ai.m5
 
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.udf
 
-object ewm {
+object Ewm {
 
   val ewm: UserDefinedFunction = udf((rowNumber: Int, tOrderedValues: Seq[Double], alpha: Double) => {
 

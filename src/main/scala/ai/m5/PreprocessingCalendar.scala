@@ -1,14 +1,14 @@
-package ai.m5.challenge
+package ai.m5
 
-import org.apache.spark.sql.{SparkSession, DataFrame}
-import org.apache.spark.sql.functions.{to_date, dayofweek, dayofmonth, dayofyear, weekofyear, quarter, col, udf}
-import org.apache.spark.sql.types._
-import scala.collection.mutable
-import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.ml.feature.StringIndexer
+import org.apache.spark.ml.{Pipeline, PipelineStage}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{ByteType, ShortType, StringType}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
+import scala.collection.mutable
 
-object preprocessing_calendar {
+object PreprocessingCalendar {
 
   def data_manipulation_1()(df: DataFrame): DataFrame = {
 
@@ -96,6 +96,5 @@ object preprocessing_calendar {
       .transform(calendar)
       .transform(data_manipulation_2())
   }
-
 
 }

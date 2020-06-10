@@ -1,12 +1,11 @@
-package ai.m5.challenge
+package ai.m5
 
 import org.apache.spark.ml.{Pipeline, PipelineModel}
-import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.{ByteType, FloatType, ShortType}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
-
-object preprocessing_prices {
+object PreprocessingPrices {
 
   /**
     * Load some stages from a fitted Pipeline (PipelineModel)
@@ -43,7 +42,7 @@ object preprocessing_prices {
     val prices = spark.sqlContext.read.format("com.databricks.spark.csv")
       .option("header", "true")
       .load(data_dir + "/source/sell_prices.csv")
-      .transform(utils.limitRows(nrows = nrows))
+      .transform(Utils.limitRows(nrows = nrows))
 
     val pipelineModel = getPipelineModel(
       spark = spark,
