@@ -74,3 +74,8 @@ extensions.
     ```bash
     sbt assembly
     ```
+- Test  
+    At the moment, only several functions are tested.
+    ```bash
+    sbt test
+    ```
