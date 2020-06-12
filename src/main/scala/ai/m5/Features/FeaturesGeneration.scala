@@ -1,8 +1,8 @@
-package ai.m5
+package ai.m5.Features
 
-import org.apache.spark.sql.{Column, DataFrame}
 import org.apache.spark.sql.expressions.{Window, WindowSpec}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{Column, DataFrame}
 
 object FeaturesGeneration {
 
@@ -21,14 +21,14 @@ object FeaturesGeneration {
       .rowsBetween(lowerBound, upperBound)
   }
 
-  def features_lags(column: String, days_lag: Seq[Int]): Seq[Column] = {
+  def featuresLags(column: String, days_lag: Seq[Int]): Seq[Column] = {
 
     days_lag.map(x => {
       lag(col(column), x).over(idWindow).alias("%s_lag_%d".format(column, x))
     })
   }
 
-  def features_differences_with_lags(column: String, days_lag: Seq[Int]): Seq[Column] = {
+  def featuresDifferencesWithLags(column: String, days_lag: Seq[Int]): Seq[Column] = {
 
     days_lag.map(x => {
       (col(column) - lag(col(column), x).over(idWindow))
@@ -36,7 +36,7 @@ object FeaturesGeneration {
     })
   }
 
-  def features_rolling_mean(columns: Seq[String], window_sizes: Seq[Int], days_lag: Seq[Int]): Seq[Column] = {
+  def featuresRollingMean(columns: Seq[String], window_sizes: Seq[Int], days_lag: Seq[Int]): Seq[Column] = {
 
     var trfs: Seq[Column] = Seq()
 
@@ -55,7 +55,7 @@ object FeaturesGeneration {
     trfs
   }
 
-  def features_ewm(columns: Seq[String], alphas: Seq[Double], days_lag: Seq[Int], row_n_column: String = "row_n"):
+  def featuresEWM(columns: Seq[String], alphas: Seq[Double], days_lag: Seq[Int], row_n_column: String = "row_n"):
   Seq[Column] = {
 
     var trfs: Seq[Column] = Seq()
@@ -80,16 +80,16 @@ object FeaturesGeneration {
 
     val columns_original = df.columns.map(x => col(x)).toSeq
 
-    val columns_lags = FeaturesGeneration.features_lags(
+    val columns_lags = FeaturesGeneration.featuresLags(
       column = "sales", days_lag = Seq(28, 28+7, 28+14))
 
-    val columns_lags_diff = FeaturesGeneration.features_differences_with_lags(
+    val columns_lags_diff = FeaturesGeneration.featuresDifferencesWithLags(
       column = "sell_price", days_lag = Seq(28))
 
-    val columns_lags_rolling_mean = FeaturesGeneration.features_rolling_mean(
+    val columns_lags_rolling_mean = FeaturesGeneration.featuresRollingMean(
       columns = Seq("sales"), window_sizes = Seq(7, 14, 28), days_lag = Seq(28))
 
-    val columns_lags_ewm = FeaturesGeneration.features_ewm(
+    val columns_lags_ewm = FeaturesGeneration.featuresEWM(
       columns = Seq("sales"), alphas = Seq(0.1, 0.05), days_lag = Seq(28))
 
     val columns_all = columns_original ++ columns_lags ++ columns_lags_diff ++

@@ -1,4 +1,4 @@
-package ai.m5
+package ai.m5.Features
 
 object FeaturesSelection {
 

@@ -1,5 +1,6 @@
 package ai.m5
 
+import ai.m5.Features.FeaturesGeneration
 import com.github.mrpowers.spark.fast.tests.DataFrameComparer
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions.col
@@ -26,7 +27,7 @@ class FeaturesGenerationSpec
       sp = spark
     )
 
-    val columns_features = FeaturesGeneration.features_lags(column="sales", days_lag=Seq(1,2))
+    val columns_features = FeaturesGeneration.featuresLags(column="sales", days_lag=Seq(1,2))
     val oiginal_features = input_data.columns.map(x => col(x))
     val result = input_data.select(oiginal_features ++ columns_features: _*)
 

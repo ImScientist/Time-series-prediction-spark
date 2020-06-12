@@ -1,4 +1,4 @@
-package ai.m5
+package ai.m5.Features
 
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.udf

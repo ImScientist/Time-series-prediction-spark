@@ -1,5 +1,7 @@
 package ai.m5
 
+import ai.m5.Features.{FeaturesGeneration, FeaturesSelection}
+import ai.m5.Preprocessing.{Calendar, Merge, Prices, Sales}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.col
 import org.apache.spark.ml.feature.{VectorAssembler, VectorIndexer}
@@ -24,9 +26,9 @@ object Main {
   def preprocessing(spark: SparkSession, data_dir: String, store_data: Boolean = true):
   (DataFrame, DataFrame, DataFrame) = {
 
-    val calendar = PreprocessingCalendar.calendar_preprocessing(spark = spark, data_dir = data_dir)
-    val sales = PreprocessingSales.sales_preprocessing(spark = spark, data_dir = data_dir)
-    val prices = PreprocessingPrices.prices_preprocessing(spark = spark, data_dir = data_dir)
+    val calendar = Calendar.calendarPreprocessing(spark = spark, data_dir = data_dir)
+    val sales = Sales.salesPreprocessing(spark = spark, data_dir = data_dir)
+    val prices = Prices.pricesPreprocessing(spark = spark, data_dir = data_dir)
 
     if (store_data) {
       calendar.write.mode("overwrite").parquet(data_dir + "/trf/calendar.parquet")
@@ -38,7 +40,7 @@ object Main {
   }
 
 
-  def clean_nans()(df: DataFrame): DataFrame = {
+  def cleanNans()(df: DataFrame): DataFrame = {
 
     val features = FeaturesSelection.getFeatures(df.columns)
 
@@ -56,9 +58,9 @@ object Main {
   def training(spark: SparkSession, data_dir: String, nrows: Int = -1): Unit = {
 
     //  spark.read.parquet(data_dir + "/trf/sales_grid.parquet")
-    val df = PreprocessingMerge.merge_data(spark, data_dir, nrows)
+    val df = Merge.mergeData(spark, data_dir, nrows)
       .transform(FeaturesGeneration.featuresGeneration())
-      .transform(clean_nans())
+      .transform(cleanNans())
 
     val features = FeaturesSelection.getFeatures(df.columns)
     val target = "sales"

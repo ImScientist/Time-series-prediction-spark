@@ -1,4 +1,4 @@
-package ai.m5
+package ai.m5.Preprocessing
 
 import org.apache.spark.ml.feature.StringIndexer
 import org.apache.spark.ml.{Pipeline, PipelineStage}
@@ -8,9 +8,9 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import scala.collection.mutable
 
-object PreprocessingCalendar {
+object Calendar {
 
-  def data_manipulation_1()(df: DataFrame): DataFrame = {
+  def dataManipulation_1()(df: DataFrame): DataFrame = {
 
     val getSignal = udf((d: String) => {
       d.substring(2)
@@ -34,7 +34,7 @@ object PreprocessingCalendar {
       .drop("weekday", "wday")
   }
 
-  def init_calendar_pipeline(): Pipeline = {
+  def initCalendarPipeline(): Pipeline = {
     val event_name_1_Indexer = new StringIndexer()
       .setInputCol("event_name_1")
       .setOutputCol("event_name_1_indexed")
@@ -63,7 +63,7 @@ object PreprocessingCalendar {
     pipeline
   }
 
-  def data_manipulation_2()(df: DataFrame): DataFrame = {
+  def dataManipulation_2()(df: DataFrame): DataFrame = {
 
     df
       .drop("event_name_1", "event_name_2", "event_type_1", "event_type_2")
@@ -79,14 +79,14 @@ object PreprocessingCalendar {
       )
   }
 
-  def calendar_preprocessing(spark: SparkSession, data_dir: String): DataFrame = {
+  def calendarPreprocessing(spark: SparkSession, data_dir: String): DataFrame = {
 
     val calendar = spark.sqlContext.read.format("com.databricks.spark.csv")
       .option("header", "true")
       .load(data_dir + "/source/calendar.csv")
-      .transform(data_manipulation_1())
+      .transform(dataManipulation_1())
 
-    val pipeline_calendar = init_calendar_pipeline()
+    val pipeline_calendar = initCalendarPipeline()
 
     val pipelineModel = pipeline_calendar.fit(calendar)
 
@@ -94,7 +94,7 @@ object PreprocessingCalendar {
 
     pipelineModel
       .transform(calendar)
-      .transform(data_manipulation_2())
+      .transform(dataManipulation_2())
   }
 
 }

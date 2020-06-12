@@ -1,11 +1,12 @@
-package ai.m5
+package ai.m5.Preprocessing
 
+import ai.m5.Utils
 import org.apache.spark.ml.{Pipeline, PipelineModel}
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{ByteType, FloatType, ShortType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object PreprocessingPrices {
+object Prices {
 
   /**
     * Load some stages from a fitted Pipeline (PipelineModel)
@@ -24,7 +25,7 @@ object PreprocessingPrices {
     the_pipeline.fit(spark.emptyDataFrame)
   }
 
-  def data_manipulation()(df: DataFrame): DataFrame = {
+  def dataManipulation()(df: DataFrame): DataFrame = {
 
     val relevantCols = Seq(
       col("store_id_indexed").cast(ByteType),
@@ -36,8 +37,8 @@ object PreprocessingPrices {
     df.select(relevantCols: _*)
   }
 
-  def prices_preprocessing(spark: SparkSession, data_dir: String,
-                           nrows: Int = -1): DataFrame = {
+  def pricesPreprocessing(spark: SparkSession, data_dir: String,
+                          nrows: Int = -1): DataFrame = {
 
     val prices = spark.sqlContext.read.format("com.databricks.spark.csv")
       .option("header", "true")
@@ -50,7 +51,7 @@ object PreprocessingPrices {
 
     pipelineModel
       .transform(prices)
-      .transform(data_manipulation())
+      .transform(dataManipulation())
   }
 
 }

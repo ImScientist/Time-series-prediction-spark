@@ -1,11 +1,12 @@
-package ai.m5
+package ai.m5.Preprocessing
 
-import org.apache.spark.sql.functions.{col, lit, udf, array, struct, explode, row_number, sum}
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import ai.m5.Utils
 import org.apache.spark.sql.expressions.{Window, WindowSpec}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{DoubleType, ShortType, StringType}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object PreprocessingMerge {
+object Merge {
 
   implicit class DataFrameFunctions(df: DataFrame) {
 
@@ -61,7 +62,7 @@ object PreprocessingMerge {
       .drop("sales_cumulative")
   }
 
-  def merge_data(spark: SparkSession, data_dir: String, nrows: Int = -1): DataFrame = {
+  def mergeData(spark: SparkSession, data_dir: String, nrows: Int = -1): DataFrame = {
 
     val calendar = spark.read.parquet(data_dir + "/trf/calendar.parquet")
     val prices = spark.read.parquet(data_dir + "/trf/prices.parquet")

@@ -1,14 +1,15 @@
-package ai.m5
+package ai.m5.Preprocessing
 
+import ai.m5.Utils
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.feature.StringIndexer
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.types.{ByteType, FloatType, ShortType}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object PreprocessingSales {
+object Sales {
 
-  def init_sales_pipeline(): Pipeline = {
+  def initSalesPipeline(): Pipeline = {
 
     val id_Indexer = new StringIndexer(uid = "id")
       .setInputCol("id")
@@ -49,7 +50,7 @@ object PreprocessingSales {
     pipeline
   }
 
-  def data_manipulation()(df: DataFrame): DataFrame = {
+  def dataManipulation()(df: DataFrame): DataFrame = {
 
     val d_Cols = df.columns.filter(_.slice(0, 2) == "d_")
 
@@ -65,15 +66,15 @@ object PreprocessingSales {
     df.select(relevantCols: _*)
   }
 
-  def sales_preprocessing(spark: SparkSession, data_dir: String,
-                          nrows: Int = -1): DataFrame = {
+  def salesPreprocessing(spark: SparkSession, data_dir: String,
+                         nrows: Int = -1): DataFrame = {
 
     val sales = spark.sqlContext.read.format("com.databricks.spark.csv")
       .option("header", "true")
       .load(data_dir + "/source/sales_train_evaluation.csv")
       .transform(Utils.limitRows(nrows=nrows))
 
-    val pipeline_sales = init_sales_pipeline()
+    val pipeline_sales = initSalesPipeline()
 
     val pipelineModel = pipeline_sales.fit(sales)
 
@@ -81,7 +82,7 @@ object PreprocessingSales {
 
     pipelineModel
       .transform(sales)
-      .transform(data_manipulation())
+      .transform(dataManipulation())
   }
 
 
