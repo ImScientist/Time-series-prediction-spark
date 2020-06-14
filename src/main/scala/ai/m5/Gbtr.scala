@@ -1,7 +1,7 @@
 package ai.m5
 
 import ai.m5.Features.{FeaturesGeneration, FeaturesSelection}
-import ai.m5.Preprocessing.{Calendar, Merge, Prices, Sales}
+import ai.m5.Preprocess.Preprocess.preprocessAndMerge
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.col
 import org.apache.spark.ml.feature.{VectorAssembler, VectorIndexer}
@@ -10,34 +10,7 @@ import org.apache.spark.ml.regression.GBTRegressor
 import org.apache.spark.ml.Pipeline
 
 
-object Main {
-
-  /**
-    * Data preprocessing;
-    * - apply StringIndexer to all relevant columns
-    * - specify DataType
-    *
-    * @param data_dir data directory with the following structure:
-    *                 data_dir
-    *                   |-- source (location of the original data)
-    *                   |-- trf (location of the preprocessed data)
-    * @param store_data whether to store the data or not in data_dir/trf
-    * */
-  def preprocessing(spark: SparkSession, data_dir: String, store_data: Boolean = true):
-  (DataFrame, DataFrame, DataFrame) = {
-
-    val calendar = Calendar.calendarPreprocessing(spark = spark, data_dir = data_dir)
-    val sales = Sales.salesPreprocessing(spark = spark, data_dir = data_dir)
-    val prices = Prices.pricesPreprocessing(spark = spark, data_dir = data_dir)
-
-    if (store_data) {
-      calendar.write.mode("overwrite").parquet(data_dir + "/trf/calendar.parquet")
-      sales.write.mode("overwrite").parquet(data_dir + "/trf/sales.parquet")
-      prices.write.mode("overwrite").parquet(data_dir + "/trf/prices.parquet")
-    }
-
-    (calendar, sales, prices)
-  }
+object Gbtr {
 
 
   def cleanNans()(df: DataFrame): DataFrame = {
@@ -52,18 +25,22 @@ object Main {
     *
     * @param data_dir data directory with the following structure:
     *                 data_dir
-    *                   |-- source (location of the original data)
-    *                   |-- trf (location of the preprocessed data which we will use)
-    * */
-  def training(spark: SparkSession, data_dir: String, nrows: Int = -1): Unit = {
+    *                 |-- source (location of the original data)
+    *                 |-- trf (location of the preprocessed data which we will use)
+    **/
+  def training(spark: SparkSession,
+               data_dir: String,
+               preprocess: Boolean = true,
+               nrows: Int = -1): Unit = {
 
     //  spark.read.parquet(data_dir + "/trf/sales_grid.parquet")
-    val df = Merge.mergeData(spark, data_dir, nrows)
+    val df = preprocessAndMerge(spark, data_dir, preprocess, nrows)
       .transform(FeaturesGeneration.featuresGeneration())
       .transform(cleanNans())
 
     val features = FeaturesSelection.getFeatures(df.columns)
-    val target = "sales"
+    val labelCol = "sales"
+    val predicitonCol = "prediction"
 
     val assembler = new VectorAssembler(uid = "assembler")
       .setInputCols(features.toArray)
@@ -75,8 +52,9 @@ object Main {
       .setMaxCategories(4)
 
     val gbt = new GBTRegressor(uid = "gradinetBooster")
-      .setLabelCol(target)
       .setFeaturesCol("indexedFeatures")
+      .setLabelCol(labelCol)
+      .setPredictionCol(predicitonCol)
       .setMaxIter(3)
 
     val indexingPipeline = new Pipeline().setStages(
@@ -103,8 +81,8 @@ object Main {
 
     // Select (prediction, true label) and compute test error.
     val evaluator = new RegressionEvaluator()
-      .setLabelCol(target)
-      .setPredictionCol("prediction")
+      .setLabelCol(labelCol)
+      .setPredictionCol(predicitonCol)
       .setMetricName("rmse")
 
     val rmse = evaluator.evaluate(predictions)

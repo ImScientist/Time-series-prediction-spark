@@ -6,8 +6,8 @@ The data to which the model is applied is from the
   
 ## Setup 
 
-- Setup Jupyter environment     
-For model prototyping we use a Jupyter notebook from 
+### Setup Jupyter environment (Jupyter Docker Stacks image)     
+- For model prototyping we use a Jupyter notebook from 
 [Jupyter Docker Stacks](https://hub.docker.com/r/jupyter/all-spark-notebook/).
 The `Dockerfile` is build on top of this image and just enables the Jupyter notebook 
 extensions. 
@@ -69,7 +69,18 @@ extensions.
     
     You can check if the new jars are present in the spark session by opening a 
     Jupyter notebook and executing `spark.sparkContext.listJars.foreach(println)`
+    
+### Setup Jupyter environment (Microsoft MMLSpark image)
+- Just follow the instructions from the official [Github repository](https://github.com/Azure/mmlspark/tree/master)
+    ```bash
+    docker run -it --rm \
+       -p 127.0.0.1:80:8888 \
+       -v "$(pwd)":/notebooks/myfiles \
+       -v "$DATA_DIR":/notebooks/data \
+       mcr.microsoft.com/mmlspark/release:latest
+    ```
 
+### Package
 - Create `.jar`   
     ```bash
     sbt assembly

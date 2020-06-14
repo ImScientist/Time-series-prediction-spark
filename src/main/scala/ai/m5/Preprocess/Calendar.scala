@@ -1,4 +1,4 @@
-package ai.m5.Preprocessing
+package ai.m5.Preprocess
 
 import org.apache.spark.ml.feature.StringIndexer
 import org.apache.spark.ml.{Pipeline, PipelineStage}

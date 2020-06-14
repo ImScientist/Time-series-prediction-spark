@@ -1,4 +1,4 @@
-package ai.m5.Preprocessing
+package ai.m5.Preprocess
 
 import ai.m5.Utils
 import org.apache.spark.sql.expressions.{Window, WindowSpec}
