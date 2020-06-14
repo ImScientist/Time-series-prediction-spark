@@ -16,11 +16,11 @@ object Lgbmr {
 
   def training(spark: SparkSession,
                data_dir: String,
-               preprocess: Boolean = true,
+               preprocess_data: Boolean = true,
                nrows: Int = -1): Unit = {
 
     //  spark.read.parquet(data_dir + "/trf/sales_grid.parquet")
-    val df = preprocessAndMerge(spark, data_dir, preprocess, nrows)
+    val df = preprocessAndMerge(spark, data_dir, preprocess_data, nrows)
       .transform(FeaturesGeneration.featuresGeneration())
       .transform(cleanNans())
 

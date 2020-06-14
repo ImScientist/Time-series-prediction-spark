@@ -85,6 +85,8 @@ extensions.
     ```bash
     sbt assembly
     ```
+    At the moment, we have assumed that the `mmlspark` library is not 
+    available in the runtime environment which makes the jar file huge (400-500 MB).
 - Test  
     At the moment, only several functions are tested.
     ```bash
